@@ -9,7 +9,7 @@ import os, json, getpass, re, importlib, sys
 gp_name = 'GizmoPacks'  # Имя папки и менюшки для гизмо паков(должна совпадать с именем папки Z:\Nuke_Workgroup\gizmos\GizmoPacks)
 
 curDir = os.path.dirname(__file__).replace("\\","/")  # Текущая папка
-json_path = curDir+'/users_settings.json'  # Файл с настройками пользователей
+users_settings_path = curDir+'/users_settings.json'  # Файл с настройками пользователей
 
 # Типы плагинов, эти имена будут использоваться в менюшке
 plTypes = ['Plugins','OFX','Gizmo Packs','Gizmos']
@@ -86,12 +86,12 @@ class SettingsPanel(nukescripts.PythonPanel):
                 self.addKnob(kn)
 
 def pluginsManager():
-    if not os.path.isfile(json_path):  # Если файла не существует создадим его и запишем в него пустой словарь
-        with open(json_path,"w") as f:
+    if not os.path.isfile(users_settings_path):  # Если файла не существует создадим его и запишем в него пустой словарь
+        with open(users_settings_path,"w") as f:
             f.write("{}")
     
     # Читаем настройки из users_settings.json
-    with open(json_path,"r") as f:
+    with open(users_settings_path,"r") as f:
         json_data = json.load(f)
     
     panel = SettingsPanel(json_data)
@@ -103,7 +103,7 @@ def pluginsManager():
         for i in lst:
             json_data[getpass.getuser()][i[0]] = panel.knDict.get(i[0]).value()
     
-    with open(json_path,'w') as f:  # Записываем эти изменения в файл
+    with open(users_settings_path,'w') as f:  # Записываем эти изменения в файл
         json.dump(json_data, f, indent=4)
 
     gp_folder = os.path.normpath(os.path.join(curDir,"..","..","gizmos",gp_name)).replace("\\","/")  # Папка со всеми паками гизм

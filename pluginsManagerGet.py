@@ -6,7 +6,7 @@
 import nuke
 import os, json, getpass
 
-json_path = os.path.dirname(__file__).replace('\\','/')+'/users_settings.json'#файл с настройками пользователей
+users_settings_path = os.path.dirname(__file__).replace('\\','/')+'/users_settings.json'#файл с настройками пользователей
 
 def getPluginsSettings(name: str) -> bool:
     """
@@ -14,8 +14,8 @@ def getPluginsSettings(name: str) -> bool:
     Если для пользователя нет настроек или нет настроек для конкретного плагина, то вернет True.
     TODO Если у пользователя нет настроек, нужно возвращать дефолтное значение для плагина, а не True
     """
-    if os.path.isfile(json_path):
-        with open(json_path,'r') as f:
+    if os.path.isfile(users_settings_path):
+        with open(users_settings_path,'r') as f:
             json_data = json.load(f)
         if getpass.getuser() in json_data:
             return json_data.get(getpass.getuser()).get(name, True)
@@ -31,8 +31,8 @@ def loadPlugins(target_dir: str, not_gui_load: bool) -> None:
     TODO Если у пользователя нет настроек, нужно ориентироваться на дефолтные настройки плагинов, а не включать принудительно
     """
     json_data = None
-    if os.path.isfile(json_path):  # Если такой файл есть, читаем инфу из него
-        with open(json_path,'r') as f:
+    if os.path.isfile(users_settings_path):  # Если такой файл есть, читаем инфу из него
+        with open(users_settings_path,'r') as f:
             json_data = json.load(f)
     user_settings = json_data.get(getpass.getuser(), {}) if json_data else {}  # Создаем пустой словарь если нет файла или для пользователя нет настроек, чтобы потом по дефолту получить True
     for d in reversed(os.listdir(target_dir)):  # Проходимся по папкам в текущей директории(в обратном порядке чтобы было по алфавиту)
