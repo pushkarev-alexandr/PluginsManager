@@ -1,0 +1,1 @@
+nuke.menu('Nuke').addCommand('Edit/Plugins Manager','import pluginsManager; pluginsManager.pluginsManager()')
