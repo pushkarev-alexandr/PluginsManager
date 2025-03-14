@@ -65,11 +65,11 @@ def isPluginAvailable(plugin_name):
         return False 
 
 class SettingsPanel(nukescripts.PythonPanel):
-    def __init__(self, json_data):
+    def __init__(self, users_settings):
         super().__init__('Plugins Manager')
         self.setMinimumSize(350,765)
 
-        user_settings = json_data.get(getpass.getuser())  # Получаем настройки плагинов для пользователя
+        user_settings = users_settings.get(getpass.getuser())  # Получаем настройки плагинов для пользователя
         self.knDict = {}  # Коллектим все добавленные кнобы в виде словаря
         for j,plType in enumerate(plTypes):  # Проходимся по типам Plugins, OFX, Gizmos
             self.addKnob(nuke.Text_Knob(plType.replace(' ','_'),plType+':'))  # Подпись для типов
@@ -92,19 +92,19 @@ def pluginsManager():
     
     # Читаем настройки из users_settings.json
     with open(users_settings_path,"r") as f:
-        json_data = json.load(f)
+        users_settings = json.load(f)
     
-    panel = SettingsPanel(json_data)
+    panel = SettingsPanel(users_settings)
     if not panel.showModalDialog():
         return
 
-    json_data[getpass.getuser()] = {}  # Записываем в словарь настройки отмеченные пользователем
+    users_settings[getpass.getuser()] = {}  # Записываем в словарь настройки отмеченные пользователем
     for lst in allInfo:
         for i in lst:
-            json_data[getpass.getuser()][i[0]] = panel.knDict.get(i[0]).value()
+            users_settings[getpass.getuser()][i[0]] = panel.knDict.get(i[0]).value()
     
     with open(users_settings_path,'w') as f:  # Записываем эти изменения в файл
-        json.dump(json_data, f, indent=4)
+        json.dump(users_settings, f, indent=4)
 
     gp_folder = os.path.normpath(os.path.join(curDir,"..","..","gizmos",gp_name)).replace("\\","/")  # Папка со всеми паками гизм
     for name in gizmoPacksInfo:  # Проходимся по всем пакам

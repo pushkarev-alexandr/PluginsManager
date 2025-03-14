@@ -16,9 +16,9 @@ def getPluginsSettings(name: str) -> bool:
     """
     if os.path.isfile(users_settings_path):
         with open(users_settings_path,'r') as f:
-            json_data = json.load(f)
-        if getpass.getuser() in json_data:
-            return json_data.get(getpass.getuser()).get(name, True)
+            users_settings = json.load(f)
+        if getpass.getuser() in users_settings:
+            return users_settings.get(getpass.getuser()).get(name, True)
     return True
 
 def loadPlugins(target_dir: str, not_gui_load: bool) -> None:
@@ -30,11 +30,11 @@ def loadPlugins(target_dir: str, not_gui_load: bool) -> None:
     Ставим False для плагинов из GizmoPacks потому что они загружаются в виде группы и не нужно во время рендера добавлять папки в pluginPath
     TODO Если у пользователя нет настроек, нужно ориентироваться на дефолтные настройки плагинов, а не включать принудительно
     """
-    json_data = None
+    users_settings = None
     if os.path.isfile(users_settings_path):  # Если такой файл есть, читаем инфу из него
         with open(users_settings_path,'r') as f:
-            json_data = json.load(f)
-    user_settings = json_data.get(getpass.getuser(), {}) if json_data else {}  # Создаем пустой словарь если нет файла или для пользователя нет настроек, чтобы потом по дефолту получить True
+            users_settings = json.load(f)
+    user_settings = users_settings.get(getpass.getuser(), {}) if users_settings else {}  # Создаем пустой словарь если нет файла или для пользователя нет настроек, чтобы потом по дефолту получить True
     for d in reversed(os.listdir(target_dir)):  # Проходимся по папкам в текущей директории(в обратном порядке чтобы было по алфавиту)
         if os.path.isdir(os.path.join(target_dir, d)) and (user_settings.get(d, True) or (not nuke.GUI and not_gui_load)):
             nuke.pluginAddPath(os.path.join(target_dir, d))
