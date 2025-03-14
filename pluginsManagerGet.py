@@ -6,7 +6,7 @@
 import nuke
 import os, json, getpass
 
-json_path = os.path.dirname(__file__).replace('\\','/')+'/pluginsManager.json'#файл с настройками пользователей
+json_path = os.path.dirname(__file__).replace('\\','/')+'/users_settings.json'#файл с настройками пользователей
 
 def getPluginsSettings(name: str) -> bool:
     """

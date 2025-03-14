@@ -9,7 +9,7 @@ import os, json, getpass, re, importlib, sys
 gp_name = 'GizmoPacks'  # Имя папки и менюшки для гизмо паков(должна совпадать с именем папки Z:\Nuke_Workgroup\gizmos\GizmoPacks)
 
 curDir = os.path.dirname(__file__).replace("\\","/")  # Текущая папка
-json_path = curDir+'/pluginsManager.json'  # Файл с настройками пользователей
+json_path = curDir+'/users_settings.json'  # Файл с настройками пользователей
 
 # Типы плагинов, эти имена будут использоваться в менюшке
 plTypes = ['Plugins','OFX','Gizmo Packs','Gizmos']
@@ -90,7 +90,7 @@ def pluginsManager():
         with open(json_path,"w") as f:
             f.write("{}")
     
-    # Читаем настройки из pluginsManager.json
+    # Читаем настройки из users_settings.json
     with open(json_path,"r") as f:
         json_data = json.load(f)
     

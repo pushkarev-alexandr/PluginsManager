@@ -5,7 +5,7 @@
 
 import os, json
 
-json_path = os.path.dirname(__file__).replace('\\','/')+'/pluginsManager.json'  # Файл с настройками пользователей
+json_path = os.path.dirname(__file__).replace('\\','/')+'/users_settings.json'  # Файл с настройками пользователей
 
 def main():
     if os.path.isfile(json_path):

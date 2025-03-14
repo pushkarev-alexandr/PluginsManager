@@ -2,4 +2,4 @@ __pycache__/
 *.pyc
 *.txt
 *.cmd
-pluginsManager.json
+users_settings.json
