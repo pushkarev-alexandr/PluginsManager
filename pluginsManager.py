@@ -65,9 +65,9 @@ def isPluginAvailable(plugin_name):
         return False 
 
 class SettingsPanel(nukescripts.PythonPanel):
-    def __init__(self,json_data):
-        nukescripts.PythonPanel.__init__(self,'Plugins Manager')
-        self.setMinimumSize(350,760)
+    def __init__(self, json_data):
+        super().__init__('Plugins Manager')
+        self.setMinimumSize(350,765)
 
         user_settings = json_data.get(getpass.getuser())  # Получаем настройки плагинов для пользователя
         self.knDict = {}  # Коллектим все добавленные кнобы в виде словаря
