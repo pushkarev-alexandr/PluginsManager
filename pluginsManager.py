@@ -10,51 +10,15 @@ gp_name = 'GizmoPacks'  # Имя папки и менюшки для гизмо 
 
 curDir = os.path.dirname(__file__).replace("\\","/")  # Текущая папка
 users_settings_path = curDir+'/users_settings.json'  # Файл с настройками пользователей
+plugins_info_path = curDir+'/plugins_info.json'  # Файл с информацией о плагинах
 
-# Типы плагинов, эти имена будут использоваться в менюшке
-plTypes = ['Plugins','OFX','Gizmo Packs','Gizmos']
-
-# имя кноба, лэйбл кноба, значение по умолчанию, можно ли редактировать значение
-pluginsInfo = [['3DE4','3DE4 Lens Distortion',True,False],
-['KeenTools','KeenTools',True,True],
-['dcraw','Поддержка .CR2 файлов',False,True],
-['NNFlowVector','NNFlowVector',True,True],
-['OIDN','Open Image Denoise',False,True],
-['OpticalFlares','Optical Flares',True,True]]
-
-ofxInfo = [['NeatVideo','Neat Video',True,False],
-['Frischluft','Frischluft',True,True],
-['RE_Vision','RE:Vision',True,True],
-['Tinderbox','Tinderbox',True,True],
-['MochaPro2024','MochaPro',True,True],
-['Sapphire','Sapphire',True,True],
-['Continuum','Continuum',True,True]]
-
-gizmoPacksInfo = [['AdrianPueyo','Adrian Pueyo',True,True],
-['AitorEcheveste','Aitor Echeveste',True,True],
-['Awesome3000','Awesome3000',True,True],
-['BenMcEwan','BenMcEwan',True,True],
-['Buddy','Buddy',False,True],
-['CompositingAcademy','Compositing Academy',False,True],
-['ExpressionNodes','Expression Nodes',False,True],
-['DUCK','DUCK',False,True],
-['LumaPictures','Luma Pictures',False,True],
-['NukeSurvivalToolkit','Nuke Survival Toolkit',True,True],
-['ParticlesCollection','ParticlesCollection',True,True],
-['Pixelfudger','Pixelfudger',True,True],
-['PointRender','Point Render',False,True],
-['SPIN','SPIN',True,True],
-['TX','TX',True,True]]
-
-gizmoInfo = [['NukeDiffusion','Nuke Diffusion',False,True]]
-
-allInfo = [pluginsInfo,ofxInfo,gizmoPacksInfo,gizmoInfo]
-
-# Проверяет доступен ли плагин в текущей версии нюка
 def isPluginAvailable(plugin_name):
+    """
+    Проверяет доступен ли плагин в текущей версии нюка
+    """
     dll_plugins = os.path.normpath(os.path.join(curDir,"..","..","plugins/dll_plugins")).replace("\\","/")  # Папка с dll плагинами, которые зависят от версии нюка
     plugin_folder = f"{dll_plugins}/{plugin_name}"  # Папка конкретного плагина
-    if not os.path.isdir(plugin_folder):  # Если папки нет, значит плагин точно не доступен
+    if not os.path.isdir(plugin_folder):  # Если папки нет, значит плагин точно недоступен
         return False
     nuke_ver_lst = [f for f in os.listdir(plugin_folder) if re.fullmatch(r"Nuke\d+\.\d+",f) and os.path.isdir(f"{plugin_folder}/{f}")]  # Получаем список папок Nuke##.#
     if not nuke_ver_lst:  # Если версий нет, значит безверсионный плагин, значит доступен
@@ -65,52 +29,60 @@ def isPluginAvailable(plugin_name):
         return False 
 
 class SettingsPanel(nukescripts.PythonPanel):
-    def __init__(self, users_settings):
-        super().__init__('Plugins Manager')
+    def __init__(self, users_settings, plugins_info):
+        super().__init__("Plugins Manager")
         self.setMinimumSize(350,765)
 
         user_settings = users_settings.get(getpass.getuser())  # Получаем настройки плагинов для пользователя
         self.knDict = {}  # Коллектим все добавленные кнобы в виде словаря
-        for j,plType in enumerate(plTypes):  # Проходимся по типам Plugins, OFX, Gizmos
-            self.addKnob(nuke.Text_Knob(plType.replace(' ','_'),plType+':'))  # Подпись для типов
-            for i,inf in enumerate(allInfo[j]):  # Проходимся по списку плагинов для конкретного типа
-                available =  [' (недоступен)',''][isPluginAvailable(inf[0]) or plType!='Plugins']  # Проверяем доступен ли плагин, если плагин не доступен в текущей версии, делаем пометку
-                kn = nuke.Boolean_Knob(inf[0],inf[1]+available,inf[2])  # Создаем чекбокс с дефолтным значением
-                if user_settings and user_settings.get(inf[0])!=None:  # Если для пользователя есть настройки, то заменим на пользовательские настройки
-                    kn.setValue(user_settings.get(inf[0]))
-                if not inf[3]:  # Делаем кноб недоступным для редактирования для 3DE4 и NeatVideo
-                    kn.setEnabled(False)
+        for pl_type, plugins in plugins_info.items():  # Проходимся по типам Plugins, OFX, Gizmo Packs, Gizmos
+            self.addKnob(nuke.Text_Knob(pl_type.replace(' ','_'), pl_type+':'))  # Подпись для типов
+            for i, (pl_name, pl_info) in enumerate(plugins.items()):  # Проходимся по плагинам для конкретного типа
+                available = [" (недоступен)",""][isPluginAvailable(pl_name) or pl_type!="Plugins"]  # Проверяем доступен ли плагин, если плагин не доступен в текущей версии, делаем пометку
+                kn = nuke.Boolean_Knob(pl_name, pl_info["label"]+available, pl_info["default"])  # Создаем чекбокс с дефолтным значением
+                if user_settings and user_settings.get(pl_name)!=None:  # Если для пользователя есть настройки, то заменим на пользовательские настройки
+                    kn.setValue(user_settings.get(pl_name))
+                kn.setEnabled(pl_info["enabled"])  # Делаем кноб недоступным для редактирования для 3DE4 и NeatVideo
                 if i!=0:  # Если кноб не первый, то начнем с новой строки, чтобы кнобы чекбоксы были друг под другом
                     kn.setFlag(nuke.STARTLINE)
-                self.knDict[inf[0]] = kn  # Добавляем кноб в словарь чтобы можно было позже получить к нему доступ
+                self.knDict[pl_name] = kn  # Добавляем кноб в словарь чтобы можно было позже получить к нему доступ
                 self.addKnob(kn)
 
 def pluginsManager():
-    if not os.path.isfile(users_settings_path):  # Если файла не существует создадим его и запишем в него пустой словарь
-        with open(users_settings_path,"w") as f:
-            f.write("{}")
+    # Проверяем что есть файл с информацией о плагинах
+    if not os.path.isfile(plugins_info_path):
+        nuke.message("Нету файла с информацией о плагинах")
+        return
+    
+    # Читаем информацию о плагинах
+    with open(plugins_info_path, "r", encoding="utf-8") as file:
+        plugins_info = json.load(file)
+
+    # Если файла с настроками пользователей нету, создадим его и запишем в него пустой словарь
+    if not os.path.isfile(users_settings_path):
+        with open(users_settings_path, "w") as file:
+            file.write("{}")
     
     # Читаем настройки из users_settings.json
-    with open(users_settings_path,"r") as f:
-        users_settings = json.load(f)
+    with open(users_settings_path, "r") as file:
+        users_settings = json.load(file)
     
-    panel = SettingsPanel(users_settings)
+    panel = SettingsPanel(users_settings, plugins_info)
     if not panel.showModalDialog():
         return
 
     users_settings[getpass.getuser()] = {}  # Записываем в словарь настройки отмеченные пользователем
-    for lst in allInfo:
-        for i in lst:
-            users_settings[getpass.getuser()][i[0]] = panel.knDict.get(i[0]).value()
+    for plugins in plugins_info.values():
+        for pl_name in plugins:
+            users_settings[getpass.getuser()][pl_name] = panel.knDict.get(pl_name).value()
     
-    with open(users_settings_path,'w') as f:  # Записываем эти изменения в файл
-        json.dump(users_settings, f, indent=4)
+    with open(users_settings_path, "w") as file:  # Записываем эти изменения в файл
+        json.dump(users_settings, file, indent=4)
 
     gp_folder = os.path.normpath(os.path.join(curDir,"..","..","gizmos",gp_name)).replace("\\","/")  # Папка со всеми паками гизм
-    for name in gizmoPacksInfo:  # Проходимся по всем пакам
-        name = name[0]  # Берем имя пака
+    for name in plugins_info["Gizmo Packs"]:  # Проходимся по всем пакам
         pack_menu = nuke.menu('Nodes').menu(f'{gp_name}/{name}')  # Ищем менюшку
-        if panel.knDict.get(name).value():#если пользователь включил плагин(или он был включен)
+        if panel.knDict.get(name).value():  # Если пользователь включил плагин(или он был включен)
             if not pack_menu:  # То создадим менюшку если она еще не существует
                 nuke.pluginAddPath(f"{gp_folder}/{name}")  # Добавляем папку в plugin path чтобы можно было вызывать nuke.createNode('some_name.gizmo')
                 module_name = f'{name}.menu'
