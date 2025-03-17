@@ -99,6 +99,24 @@ def pluginsManager():
             if pack_menu:  # Тогда удалим менюшку если она существует
                 nuke.menu('Nodes').menu(gp_name).removeItem(name)
 
+    name = "ComfyUI"
+    comfy_menu = nuke.menu("Nodes").findItem(name)
+    if panel.knDict.get(name).value():  # Если пользователь включил плагин(или он был включен)
+        if not comfy_menu:  # То создадим менюшку если она еще не существует
+            nuke.pluginAddPath(f"{gizmos_folder}/{name}Nuke")  # Добавляем папку в plugin path чтобы можно было вызывать nuke.createNode()
+            nuke.pluginAddPath(f"{gizmos_folder}/{name}Nuke/Workflows")  # Добавляем папку Workflows хотя она добавляется в menu.py(возможно там нужно указывать полный путь)
+            module_name = f'{name}Nuke.menu'
+            if module_name in sys.modules:
+                importlib.reload(sys.modules[module_name])  # Менюшку уже создавали, нужно пересоздать
+            else:
+                try:
+                    importlib.import_module(module_name)  # Импортируем если никогда не был импортирован(т.е. менюшка до этого не была создана вызовом menu)
+                except:
+                    pass
+    else:
+        if comfy_menu:  # Тогда удалим менюшку если она существует
+            nuke.menu('Nodes').removeItem(name)
+
 def getGPmenu() -> nuke.Menu:
     """
     Вернет меню для GizmoPacks. Если такого меню не существует, то создаст его
