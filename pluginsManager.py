@@ -5,18 +5,20 @@
 
 import nuke, nukescripts
 import os, json, getpass, re, importlib, sys
+from pathlib import Path
 
-gp_name = 'GizmoPacks'  # Имя папки и менюшки для гизмо паков(должна совпадать с именем папки Z:\Nuke_Workgroup\gizmos\GizmoPacks)
+gp_name = 'GizmoPacks'  # Имя папки и менюшки для гизмо паков(должна совпадать с именем папки Z:/Nuke_Workgroup/gizmos/GizmoPacks)
 
 curDir = os.path.dirname(__file__).replace("\\","/")  # Текущая папка
 users_settings_path = curDir+'/users_settings.json'  # Файл с настройками пользователей
 plugins_info_path = curDir+'/plugins_info.json'  # Файл с информацией о плагинах
+nuke_workgroup_folder = str(Path(curDir).parent.parent).replace("\\","/")  # Путь до папки Z:/Nuke_Workgroup
 
 def isPluginAvailable(plugin_name):
     """
     Проверяет доступен ли плагин в текущей версии нюка
     """
-    dll_plugins = os.path.normpath(os.path.join(curDir,"..","..","plugins/dll_plugins")).replace("\\","/")  # Папка с dll плагинами, которые зависят от версии нюка
+    dll_plugins = f"{nuke_workgroup_folder}/plugins/dll_plugins"  # Папка с dll плагинами, которые зависят от версии нюка
     plugin_folder = f"{dll_plugins}/{plugin_name}"  # Папка конкретного плагина
     if not os.path.isdir(plugin_folder):  # Если папки нет, значит плагин точно недоступен
         return False
@@ -31,7 +33,7 @@ def isPluginAvailable(plugin_name):
 class SettingsPanel(nukescripts.PythonPanel):
     def __init__(self, users_settings, plugins_info):
         super().__init__("Plugins Manager")
-        self.setMinimumSize(350,765)
+        self.setMinimumSize(350,790)
 
         user_settings = users_settings.get(getpass.getuser())  # Получаем настройки плагинов для пользователя
         self.knDict = {}  # Коллектим все добавленные кнобы в виде словаря
@@ -79,12 +81,12 @@ def pluginsManager():
     with open(users_settings_path, "w") as file:  # Записываем эти изменения в файл
         json.dump(users_settings, file, indent=4)
 
-    gp_folder = os.path.normpath(os.path.join(curDir,"..","..","gizmos",gp_name)).replace("\\","/")  # Папка со всеми паками гизм
+    gizmos_folder = f"{nuke_workgroup_folder}/gizmos"  # Папка с гизмами Z:/Nuke_Workgroup/gizmos
     for name in plugins_info["Gizmo Packs"]:  # Проходимся по всем пакам
         pack_menu = nuke.menu('Nodes').menu(f'{gp_name}/{name}')  # Ищем менюшку
         if panel.knDict.get(name).value():  # Если пользователь включил плагин(или он был включен)
             if not pack_menu:  # То создадим менюшку если она еще не существует
-                nuke.pluginAddPath(f"{gp_folder}/{name}")  # Добавляем папку в plugin path чтобы можно было вызывать nuke.createNode('some_name.gizmo')
+                nuke.pluginAddPath(f"{gizmos_folder}/{gp_name}/{name}")  # Добавляем папку в plugin path чтобы можно было вызывать nuke.createNode('some_name.gizmo')
                 module_name = f'{name}.menu'
                 if module_name in sys.modules:
                     importlib.reload(sys.modules[module_name])  # Менюшку уже создавали, нужно пересоздать
