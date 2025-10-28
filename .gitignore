@@ -3,3 +3,4 @@ __pycache__/
 *.txt
 *.cmd
 *.json
+test.py

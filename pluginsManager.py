@@ -28,12 +28,45 @@ def isPluginAvailable(plugin_name):
     elif f"Nuke{nuke.NUKE_VERSION_MAJOR}.{nuke.NUKE_VERSION_MINOR}" in nuke_ver_lst:  # Иначе проверяем есть ли плагин для текущей версии
         return True
     else:
-        return False 
+        return False
+
+def togglePluginMenu(plugin_name, is_enabled, current_menu, plugin_paths, parent_menu=None):
+    """
+    Включает или выключает плагин/гизмо через добавление/удаление меню и путей
+    
+    Args:
+        plugin_name: Имя плагина
+        is_enabled: Включен ли плагин (True/False)
+        current_menu: Текущее меню плагина (если существует)
+        plugin_paths: Список путей для добавления через nuke.pluginAddPath
+        parent_menu: Родительское меню (например, 'GizmoPacks'), если нужно удалить подменю
+    """
+    if is_enabled:  # Если пользователь включил плагин
+        if not current_menu:  # То создадим менюшку если она еще не существует
+            # Добавляем все пути плагина
+            for path in plugin_paths:
+                nuke.pluginAddPath(path)
+            
+            # Импортируем меню плагина
+            module_name = f'{plugin_name}.menu'
+            if module_name in sys.modules:
+                importlib.reload(sys.modules[module_name])  # Менюшку уже создавали, нужно пересоздать
+            else:
+                try:
+                    importlib.import_module(module_name)  # Импортируем если никогда не был импортирован
+                except:
+                    pass
+    else:  # Если пользователь выключил плагин
+        if current_menu:  # Тогда удалим менюшку если она существует
+            if parent_menu:
+                nuke.menu('Nodes').menu(parent_menu).removeItem(plugin_name)
+            else:
+                nuke.menu('Nodes').removeItem(plugin_name) 
 
 class SettingsPanel(nukescripts.PythonPanel):
-    def __init__(self, users_settings, plugins_info):
+    def __init__(self, users_settings: dict, plugins_info: dict):
         super().__init__("Plugins Manager")
-        self.setMinimumSize(350, 810)
+        self.setMinimumSize(350, 830)
 
         user_settings = users_settings.get(getpass.getuser())  # Получаем настройки плагинов для пользователя
         self.knDict = {}  # Коллектим все добавленные кнобы в виде словаря
@@ -67,7 +100,7 @@ def pluginsManager():
     
     # Читаем настройки из users_settings.json
     with open(users_settings_path, "r") as file:
-        users_settings = json.load(file)
+        users_settings: dict = json.load(file)
     
     panel = SettingsPanel(users_settings, plugins_info)
     if not panel.showModalDialog():
@@ -82,40 +115,21 @@ def pluginsManager():
         json.dump(users_settings, file, indent=4)
 
     gizmos_folder = f"{nuke_workgroup_folder}/gizmos"  # Папка с гизмами Z:/Nuke_Workgroup/gizmos
-    for name in plugins_info["Gizmo Packs"]:  # Проходимся по всем пакам
-        pack_menu = nuke.menu('Nodes').menu(f'{gp_name}/{name}')  # Ищем менюшку
-        if panel.knDict.get(name).value():  # Если пользователь включил плагин(или он был включен)
-            if not pack_menu:  # То создадим менюшку если она еще не существует
-                nuke.pluginAddPath(f"{gizmos_folder}/{gp_name}/{name}")  # Добавляем папку в plugin path чтобы можно было вызывать nuke.createNode('some_name.gizmo')
-                module_name = f'{name}.menu'
-                if module_name in sys.modules:
-                    importlib.reload(sys.modules[module_name])  # Менюшку уже создавали, нужно пересоздать
-                else:
-                    try:
-                        importlib.import_module(module_name)  # Импортируем если никогда не был импортирован(т.е. менюшка до этого не была создана вызовом menu)
-                    except:
-                        pass
-        else:  # Если пользователь выключил плагин(или он был выключен)
-            if pack_menu:  # Тогда удалим менюшку если она существует
-                nuke.menu('Nodes').menu(gp_name).removeItem(name)
+    
+    # Обрабатываем Gizmo Packs
+    for name in plugins_info["Gizmo Packs"]:
+        pack_menu = nuke.menu('Nodes').menu(f'{gp_name}/{name}')
+        plugin_paths = [f"{gizmos_folder}/{gp_name}/{name}"]
+        togglePluginMenu(name, panel.knDict.get(name).value(), pack_menu, plugin_paths, parent_menu=gp_name)
 
-    name = "ComfyUI"
+    # Обрабатываем ComfyUINuke
+    name = "ComfyUINuke"
     comfy_menu = nuke.menu("Nodes").findItem(name)
-    if panel.knDict.get(name).value():  # Если пользователь включил плагин(или он был включен)
-        if not comfy_menu:  # То создадим менюшку если она еще не существует
-            nuke.pluginAddPath(f"{gizmos_folder}/{name}Nuke")  # Добавляем папку в plugin path чтобы можно было вызывать nuke.createNode()
-            nuke.pluginAddPath(f"{gizmos_folder}/{name}Nuke/Workflows")  # Добавляем папку Workflows хотя она добавляется в menu.py(возможно там нужно указывать полный путь)
-            module_name = f'{name}Nuke.menu'
-            if module_name in sys.modules:
-                importlib.reload(sys.modules[module_name])  # Менюшку уже создавали, нужно пересоздать
-            else:
-                try:
-                    importlib.import_module(module_name)  # Импортируем если никогда не был импортирован(т.е. менюшка до этого не была создана вызовом menu)
-                except:
-                    pass
-    else:
-        if comfy_menu:  # Тогда удалим менюшку если она существует
-            nuke.menu('Nodes').removeItem(name)
+    plugin_paths = [
+        f"{gizmos_folder}/{name}",
+        f"{gizmos_folder}/{name}/Workflows"
+    ]
+    togglePluginMenu(name, panel.knDict.get(name).value(), comfy_menu, plugin_paths)
 
 def getGPmenu() -> nuke.Menu:
     """
