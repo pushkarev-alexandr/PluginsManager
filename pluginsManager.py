@@ -44,9 +44,12 @@ def togglePluginMenu(plugin_name, is_enabled, current_menu, plugin_paths, parent
     if is_enabled:  # Если пользователь включил плагин
         if not current_menu:  # То создадим менюшку если она еще не существует
             # Добавляем все пути плагина
-            for path in plugin_paths:
-                nuke.pluginAddPath(path)
-            
+            if isinstance(plugin_paths, str):
+                nuke.pluginAddPath(plugin_paths)
+            else:
+                for path in plugin_paths:
+                    nuke.pluginAddPath(path)
+
             # Импортируем меню плагина
             module_name = f'{plugin_name}.menu'
             if module_name in sys.modules:
@@ -119,7 +122,7 @@ def pluginsManager():
     # Обрабатываем Gizmo Packs
     for name in plugins_info["Gizmo Packs"]:
         pack_menu = nuke.menu('Nodes').menu(f'{gp_name}/{name}')
-        plugin_paths = [f"{gizmos_folder}/{gp_name}/{name}"]
+        plugin_paths = f"{gizmos_folder}/{gp_name}/{name}"
         togglePluginMenu(name, panel.knDict.get(name).value(), pack_menu, plugin_paths, parent_menu=gp_name)
 
     # Обрабатываем ComfyUINuke
@@ -130,6 +133,12 @@ def pluginsManager():
         f"{gizmos_folder}/{name}/Workflows"
     ]
     togglePluginMenu(name, panel.knDict.get(name).value(), comfy_menu, plugin_paths)
+
+    # Обрабатываем ComfyUI
+    name = "ComfyUI"
+    is_enabled = panel.knDict.get(name).value()
+    comfy_menu = nuke.menu("Nodes").findItem(name)
+    togglePluginMenu(name, is_enabled, comfy_menu, f"{gizmos_folder}/{name}")
 
 def getGPmenu() -> nuke.Menu:
     """
