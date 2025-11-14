@@ -69,7 +69,7 @@ def togglePluginMenu(plugin_name, is_enabled, current_menu, plugin_paths, parent
 class SettingsPanel(nukescripts.PythonPanel):
     def __init__(self, users_settings: dict, plugins_info: dict):
         super().__init__("Plugins Manager")
-        self.setMinimumSize(350, 830)
+        self.setMinimumSize(350, 850)
 
         user_settings = users_settings.get(getpass.getuser())  # Получаем настройки плагинов для пользователя
         self.knDict = {}  # Коллектим все добавленные кнобы в виде словаря
