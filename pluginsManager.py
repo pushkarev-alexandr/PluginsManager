@@ -69,12 +69,12 @@ def togglePluginMenu(plugin_name, is_enabled, current_menu, plugin_paths, parent
 class SettingsPanel(nukescripts.PythonPanel):
     def __init__(self, users_settings: dict, plugins_info: dict):
         super().__init__("Plugins Manager")
-        self.setMinimumSize(350, 850)
+        self.setMinimumSize(350, 490)
 
         user_settings = users_settings.get(getpass.getuser())  # Получаем настройки плагинов для пользователя
         self.knDict = {}  # Коллектим все добавленные кнобы в виде словаря
         for pl_type, plugins in plugins_info.items():  # Проходимся по типам Plugins, OFX, Gizmo Packs, Gizmos
-            self.addKnob(nuke.Text_Knob(pl_type.replace(' ','_'), pl_type+':'))  # Подпись для типов
+            self.addKnob(nuke.Tab_Knob(pl_type.replace(' ','_'), pl_type))  # Вкладка для типов
             for i, (pl_name, pl_info) in enumerate(plugins.items()):  # Проходимся по плагинам для конкретного типа
                 available = [" (недоступен)",""][isPluginAvailable(pl_name) or pl_type!="Plugins"]  # Проверяем доступен ли плагин, если плагин не доступен в текущей версии, делаем пометку
                 kn = nuke.Boolean_Knob(pl_name, pl_info["label"]+available, pl_info["default"])  # Создаем чекбокс с дефолтным значением
