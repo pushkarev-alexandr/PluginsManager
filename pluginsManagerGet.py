@@ -18,7 +18,7 @@ def getPluginsSettings(name: str) -> bool:
     """
     # Проверим в настройках для пользователя
     if os.path.isfile(users_settings_path):
-        with open(users_settings_path, "r") as file:
+        with open(users_settings_path, "r", encoding="utf-8") as file:
             users_settings = json.load(file)
         user = getpass.getuser()
         if user in users_settings and name in users_settings[user]:
@@ -26,7 +26,7 @@ def getPluginsSettings(name: str) -> bool:
     
     # Если не получилось получить настройки у пользователя, возьмем настройки по умолчанию
     if os.path.isfile(plugins_info_path):
-        with open(plugins_info_path, "r") as file:
+        with open(plugins_info_path, "r", encoding="utf-8") as file:
             plugins_info = json.load(file)
         for plugins in plugins_info.values():
             if name in plugins:

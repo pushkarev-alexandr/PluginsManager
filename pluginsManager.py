@@ -69,7 +69,7 @@ def togglePluginMenu(plugin_name, is_enabled, current_menu, plugin_paths, parent
 class SettingsPanel(nukescripts.PythonPanel):
     def __init__(self, users_settings: dict, plugins_info: dict):
         super().__init__("Plugins Manager")
-        self.setMinimumSize(350, 490)
+        self.setMinimumSize(350, 495)
 
         user_settings = users_settings.get(getpass.getuser())  # Получаем настройки плагинов для пользователя
         self.knDict = {}  # Коллектим все добавленные кнобы в виде словаря
@@ -81,6 +81,8 @@ class SettingsPanel(nukescripts.PythonPanel):
                 if user_settings and user_settings.get(pl_name)!=None:  # Если для пользователя есть настройки, то заменим на пользовательские настройки
                     kn.setValue(user_settings.get(pl_name))
                 kn.setEnabled(pl_info["enabled"])  # Делаем кноб недоступным для редактирования для 3DE4 и NeatVideo
+                if "tooltip" in pl_info and pl_info["tooltip"]:  # Устанавливаем tooltip если он указан
+                    kn.setTooltip(pl_info["tooltip"])
                 if i!=0:  # Если кноб не первый, то начнем с новой строки, чтобы кнобы чекбоксы были друг под другом
                     kn.setFlag(nuke.STARTLINE)
                 self.knDict[pl_name] = kn  # Добавляем кноб в словарь чтобы можно было позже получить к нему доступ
