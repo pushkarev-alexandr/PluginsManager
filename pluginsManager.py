@@ -4,8 +4,10 @@
 #created by: Pushkarev Aleksandr
 
 import nuke, nukescripts
-import os, json, getpass, re, importlib, sys
+import os, json, re, importlib, sys
 from pathlib import Path
+
+from pluginsManagerGet import current_user
 
 gp_name = 'GizmoPacks'  # Имя папки и менюшки для гизмо паков(должна совпадать с именем папки Z:/Nuke_Workgroup/gizmos/GizmoPacks)
 
@@ -71,7 +73,7 @@ class SettingsPanel(nukescripts.PythonPanel):
         super().__init__("Plugins Manager")
         self.setMinimumSize(350, 495)
 
-        user_settings = users_settings.get(getpass.getuser())  # Получаем настройки плагинов для пользователя
+        user_settings = users_settings.get(current_user())  # Получаем настройки плагинов для пользователя
         self.knDict = {}  # Коллектим все добавленные кнобы в виде словаря
         for pl_type, plugins in plugins_info.items():  # Проходимся по типам Plugins, OFX, Gizmo Packs, Gizmos
             self.addKnob(nuke.Tab_Knob(pl_type.replace(' ','_'), pl_type))  # Вкладка для типов
@@ -111,10 +113,10 @@ def pluginsManager():
     if not panel.showModalDialog():
         return
 
-    users_settings[getpass.getuser()] = {}  # Записываем в словарь настройки отмеченные пользователем
+    users_settings[current_user()] = {}  # Записываем в словарь настройки отмеченные пользователем
     for plugins in plugins_info.values():
         for pl_name in plugins:
-            users_settings[getpass.getuser()][pl_name] = panel.knDict.get(pl_name).value()
+            users_settings[current_user()][pl_name] = panel.knDict.get(pl_name).value()
     
     with open(users_settings_path, "w") as file:  # Записываем эти изменения в файл
         json.dump(users_settings, file, indent=4)

@@ -10,6 +10,9 @@ curDir = os.path.dirname(__file__).replace("\\","/")  # Текущая папк�
 users_settings_path = curDir+"/users_settings.json"  # Файл с настройками пользователей
 plugins_info_path = curDir+"/plugins_info.json"  # Файл с информацией о плагинах
 
+def current_user() -> str:
+    return getpass.getuser().lower()
+
 def getPluginsSettings(name: str) -> bool:
     """
     Функция возвращает включать или нет плагин по имени name для текущего пользователя.
@@ -20,7 +23,7 @@ def getPluginsSettings(name: str) -> bool:
     if os.path.isfile(users_settings_path):
         with open(users_settings_path, "r", encoding="utf-8") as file:
             users_settings = json.load(file)
-        user = getpass.getuser()
+        user = current_user()
         if user in users_settings and name in users_settings[user]:
             return users_settings[user][name]
     
